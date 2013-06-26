@@ -1,3 +1,9 @@
+Macchiato-eventbus
+==================
+
+A javascript distributed event bus for navigators, cordova apps and vert.x servers
+
+
 You need to have node.js and vert.x installed.
 
 see : 
