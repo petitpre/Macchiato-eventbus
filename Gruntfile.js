@@ -26,6 +26,7 @@ module.exports = function(grunt) {
 
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-exec');
+  grunt.loadNpmTasks('grunt-execute');
   grunt.loadNpmTasks('grunt-contrib-qunit');
 
   // Project configuration.
@@ -51,18 +52,27 @@ module.exports = function(grunt) {
         exec : {
           start : {
             cmd : function() {
-              return "cd src/test/server; vertx run testserver.js -conf config.js & echo $! >   macchiato.pid; sleep 2";
+              return "node src/test/server/testserver.js & echo $! >   .node.pid; sleep 2";
             }
           },
           stop : {
             cmd : function() {
-              return "value=`cat src/test/server/macchiato.pid`; kill $value; rm  src/test/server/macchiato.pid";
+              return "value=`cat .node.pid`; kill $value; rm  .node.pid";
             }
           }
         },
 
+        /**
+         * run qunit test
+         */
         qunit : {
           all : [ 'src/test/client/*.html' ]
+        },
+
+        execute : {
+          test : {
+            src : [ 'src/test/server/serverTestLauncher.js' ]
+          }
         },
 
         concat : {
@@ -89,7 +99,7 @@ module.exports = function(grunt) {
 
   // Default task(s).
   grunt.registerTask('test', [ 'clean', 'jshint', 'exec:start', 'qunit',
-      'exec:stop' ]);
+      'execute:test', 'exec:stop' ]);
   grunt.registerTask('build', [ 'concat', 'uglify' ]);
   grunt.registerTask('default', [ 'clean', 'test', 'build' ]);
 

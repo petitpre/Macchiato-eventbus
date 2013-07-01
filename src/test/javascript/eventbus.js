@@ -17,7 +17,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-module("Event bus");
+//module("Event bus");
 
 // send a simple message to an handler
 test("send message to an handler", function() {
@@ -80,13 +80,14 @@ asyncTest("create and use a channel", function() {
 
   macchiato.createEventApplication(function(bus) {
 
-    bus.createChannel("ws://localhost:8091").when(function(channel) {
+    bus.createChannel("ws://localhost:8092").when(function(channel) {
       channel.send({
         "content" : "Hello, World 4"
       }).when(function(reply) {
         ok(true, "yeah, ca marche !");
-        start();
+        
         channel.close();
+        start();
       });
     });
   });

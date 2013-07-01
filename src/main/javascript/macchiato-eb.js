@@ -137,6 +137,10 @@
 
     this.createChannel = function(url) {
       var future = new Future();
+
+      // TODO use a different channel for each URL protocol
+
+      // var channel = new SocketIOChannel(url);
       var channel = new WSChannel(url);
       channel.connect(future);
       return future;
@@ -192,7 +196,7 @@
       channellogger.fine("connect channel " + this.id + " to destination "
           + this.url);
 
-      this.socket = new WebSocket(this.url);
+      this.socket = new WebSocket(this.url, 'macchiato-protocol');
       var channel = this;
       this.socket.onopen = function(event) {
         channellogger.info("connected to " + channel.url);
@@ -205,6 +209,9 @@
         channellogger.info("received message : " + message.data);
         channel.unwrap(message.data);
       };
+      this.socket.onerror = function(error) {
+        channellogger.fine("websocket error : " + error);
+      };
       this.send = function(msg) {
         channellogger.fine("send message " + JSON.stringify(msg) + " to "
             + channel.url);
@@ -215,6 +222,40 @@
 
       this.close = function() {
         channel.socket.close();
+      };
+    }
+  });
+
+  var SocketIOChannel = Channel.extend({
+    initialize : function(url) {
+      this.url = url;
+      this.id = guid();
+    },
+    connect : function(future) {
+      channellogger.fine("connect channel " + this.id + " to destination "
+          + this.url);
+
+      var channel = this;
+      // var io = require("socket.io");
+      var socket = io.connect(channel.url);
+
+      socket.on('connect', function() {
+        channellogger.info("connected to " + channel.url);
+        future.deliver(channel);
+      });
+      socket.on('disconnect', function() {
+        channellogger.info("connection closed : " + this.url);
+      });
+      socket.on('message', function(message) {
+        channellogger.info("received message : " + message);
+        channel.unwrap(message);
+      });
+      this.send = function(msg) {
+        channellogger.fine("send message " + JSON.stringify(msg) + " to "
+            + channel.url);
+        var future = new Future();
+        socket.send(JSON.stringify(channel.wrap(msg, future.deliver)));
+        return future;
       };
     }
   });
