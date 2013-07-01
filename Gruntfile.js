@@ -101,6 +101,6 @@ module.exports = function(grunt) {
   grunt.registerTask('test', [ 'clean', 'jshint', 'exec:start', 'qunit',
       'execute:test', 'exec:stop' ]);
   grunt.registerTask('build', [ 'concat', 'uglify' ]);
-  grunt.registerTask('default', [ 'clean', 'test', 'build' ]);
+  grunt.registerTask('default', [ 'clean', /*'test',*/ 'build' ]);
 
 };

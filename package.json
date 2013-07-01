@@ -1,6 +1,6 @@
 {
-  "name": "macchiato-framework",
-  "version": "0.0.2",
+  "name": "macchiato-eventbus",
+  "version": "0.0.1",
   "devDependencies": {
     "grunt": "0.4.x", 
     
