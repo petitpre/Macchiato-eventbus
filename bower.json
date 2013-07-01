@@ -1,0 +1,13 @@
+{
+  "name": "Macchiato-eventbus",
+  "version": "0.0.1",
+  "dependencies": {
+    "qunit": "~1.11.0",
+    "socket.io-client":"~0.9.16"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components"
+  ]
+}
