@@ -939,10 +939,13 @@
      * Send a message to all handlers that listen for this address
      */
     this.publish = function(message) {
+      var replyhandler = function() {
+        log.warning("you should not reply to publish message");
+      };
       for ( var id in handlers) {
         var filter = handlers[id].filter;
         if (filterMatch(filter, message)) {
-          handlers[id].handler(message);
+          handlers[id].handler(message, replyhandler);
         }
       }
     };
@@ -1044,6 +1047,7 @@
         channel.socket.send(JSON.stringify(channel.wrap(msg, future.deliver)));
         return future;
       };
+      this.messageHandler = this.send;
 
       this.close = function() {
         channel.socket.close();
@@ -1082,6 +1086,7 @@
         socket.send(JSON.stringify(channel.wrap(msg, future.deliver)));
         return future;
       };
+      this.messageHandler = this.send;
     }
   });
 

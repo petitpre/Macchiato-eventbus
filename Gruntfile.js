@@ -80,11 +80,7 @@ module.exports = function(grunt) {
           bar : {
             src : [ 'src/main/javascript/futuresjs/*.js',
                 'src/main/javascript/macchiato-commons.js',
-                'src/main/javascript/macchiato-eb.js'
-            // ,
-            // 'src/macchiato-router.js', 'src/macchiato-actor.js',
-            // 'src/macchiato-manager.js', 'src/macchiato-wsclient.js'
-            ],
+                'src/main/javascript/macchiato-eb.js' ],
             dest : 'target/macchiato.js'
           }
         },
@@ -101,6 +97,6 @@ module.exports = function(grunt) {
   grunt.registerTask('test', [ 'clean', 'jshint', 'exec:start', 'qunit',
       'execute:test', 'exec:stop' ]);
   grunt.registerTask('build', [ 'concat', 'uglify' ]);
-  grunt.registerTask('default', [ 'clean', /*'test',*/ 'build' ]);
+  grunt.registerTask('default', [ 'clean', /* 'test', */'build' ]);
 
 };
