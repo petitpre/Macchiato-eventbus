@@ -17,6 +17,8 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 (function() {
+  if (typeof require != 'undefined')
+    require("./macchiato-commons.js");
 
   var log = macchiato.logger("eb");
 
@@ -29,17 +31,13 @@
         + S4() + S4());
   };
 
-  /**
-   * Clone the object in parameter
-   */
-  var clone = function(obj) {
-    var target = {};
-    for ( var i in obj) {
-      if (obj.hasOwnProperty(i)) {
-        target[i] = obj[i];
-      }
+  /*****************************************************************************
+   * event filters
+   ****************************************************************************/
+  var filters = {
+    all : function() {
+      return true;
     }
-    return target;
   };
 
   /*****************************************************************************
@@ -52,23 +50,34 @@
      * Register a new handler at specified address
      */
     this.subscribe = function(handler, filter) {
+      var subscription = this.silentSubscribe(handler, filter, true);
+      this.publish({
+        subscription : subscription
+      });
+      return subscription;
+    };
+
+    this.silentSubscribe = function(handler, filter, local) {
       if (!handler)
         throw "handler not specified";
-      if (handler instanceof Channel)
-        handler = handler.messageHandler;
 
       var id = guid();
 
-      log.fine("subscribe handler " + id + " with filter : "
+      log.fine("subscribe handler " + " with id : " + id + " and filter : "
           + JSON.stringify(filter));
       handlers[id] = {
         filter : filter,
-        handler : handler
+        handler : handler,
+        local : local
       };
-      return {
-        id : id
+
+      var subscription = {
+        id : id,
+        filter : filter
       };
-    };
+
+      return subscription;
+    }
 
     /**
      * Unregister a new handler at specified address
@@ -80,6 +89,12 @@
       if (handlers[subscription.id]) {
         log.fine("unsubscribe handler " + subscription.id);
         delete handlers[subscription.id];
+
+        this.publish({
+          "unsubscription" : {
+            "id" : subscription.id
+          }
+        });
       } else {
         throw "unable to unregister handler: not found";
       }
@@ -93,7 +108,14 @@
       var patt;
       if (typeof filter == "string") {
         patt = new RegExp(filter);
-        return patt.test(JSON.stringify(obj));
+        try {
+          return patt.test(JSON.stringify(obj));
+        } catch (err) {
+          return false;
+        }
+      }
+      if (typeof filter == "function") {
+        return filter(obj);
       }
       // filter properties
       for ( var filterprop in filter) {
@@ -114,37 +136,57 @@
      * Send a message to all handlers that listen for this address
      */
     this.publish = function(message) {
-      var replyhandler = function() {
-        log.warning("you should not reply to publish message");
-      };
       for ( var id in handlers) {
         var filter = handlers[id].filter;
         if (filterMatch(filter, message)) {
-          handlers[id].handler(message, replyhandler);
+          try {
+            handlers[id].handler(message);
+          } catch (err) {
+            log.warning("unable to publish message " + err);
+          }
         }
       }
     };
 
+    var bus = this;
     /**
-     * Send a message to one handler that listen for this address
+     * send current and futures registrations in any new channel
      */
-    this.send = function(subscription, message) {
-      if (handlers[subscription.id]) {
-        var future = new Future();
-        handlers[subscription.id].handler(message, future.deliver);
-        return future;
-      } else {
-        log.warning("No handler for " + subscription);
+    bus.silentSubscribe(function(msg) {
+      // when connected, send all previously registered handlers
+      for ( var id in handlers) {
+        if (handlers[id].local == true) {
+          msg.channel.sendSubscription({
+            subscription : {
+              id : id,
+              filter : handlers[id].filter
+            }
+          });
+        }
       }
-    };
+      // register to any new subscription
+      bus.silentSubscribe(function(msg) {
+        msg.channel.sendSubscription(msg);
+      }, {
+        "subscription" : ".*"
+      });
+    }, {
+      channel : filters.all
+    });
 
     this.createChannel = function(url) {
-      var future = new Future();
+      var bus = this;
 
       // TODO use a different channel for each URL protocol
-
       // var channel = new SocketIOChannel(url);
-      var channel = new WSChannel(url);
+      var channel = new WSChannel(url, this);
+
+      var future = new Future();
+      future.when(function(channel) {
+        bus.publish({
+          channel : channel
+        });
+      });
       channel.connect(future);
       return future;
     };
@@ -153,47 +195,46 @@
   /*****************************************************************************
    * Channel definition
    ****************************************************************************/
+
   var channellogger = macchiato.logger("channel");
   var Channel = macchiato.Class.extend({
-    initialization : function() {
+    initialization : function(bus) {
+      this.bus = bus;
     },
-    messageHandler : function(msg) {
-      throw "Handle function not implemented for this channel";
+    cleanup : function() {
+      // TODO remove all registered handlers
     },
-    wrap : function(msg, replyHandler) {
-      var obj = {
-        header : {},
-        content : msg
-      };
-      if (replyHandler) {
-        if (!this.replyhandlers)
-          this.replyhandlers = {};
-
-        var id = guid();
-        this.replyhandlers[id] = replyHandler;
-        obj.header.replyto = id;
-      }
-      return obj;
-    },
-    unwrap : function(msg) {
+    onReceived : function(msg) {
+      var channel = this;
       var content = JSON.parse(msg);
-      if (content.header && content.header.replyto) {
-        console.log("handle reply to " + msg.header.replyto);
-      } else if (content.header && content.header.to) {
-        this.replyhandlers[content.header.to](content.content);
+      if (typeof content.subscription != "undefined") {
+        channel.bus.silentSubscribe(function(msg) {
+          channel.sendMessage(msg);
+        }, content.subscription.filter);
+      } else if (typeof content.content != "undefined") {
+        channel.bus.publish(content.content);
       }
     },
-    onReceive : function(handler) {
-      if (!this.receivers)
-        this.receivers = [];
-      this.receivers.push(handler);
+    sendMessage : function(msg) {
+      this.send(JSON.stringify({
+        content : msg
+      }));
+    },
+    sendSubscription : function(subscription) {
+      this.send(JSON.stringify(subscription));
+    },
+    send : function() {
+      throw "not defined";
+    },
+    onDisconnect : function() {
+
     }
   });
 
   var WSChannel = Channel.extend({
-    initialize : function(url) {
+    initialize : function(url, bus) {
       this.url = url;
-      this.id = guid();
+      this.bus = bus;
     },
     connect : function(future) {
       channellogger.fine("connect channel " + this.id + " to destination "
@@ -207,63 +248,63 @@
       };
       this.socket.onclose = function() {
         channellogger.info("connection closed : " + this.url);
+        channel.onDisconnect();
+        channel.cleanup();
+        // TODO handle reconnection ?
       };
       this.socket.onmessage = function(message) {
         channellogger.info("received message : " + message.data);
-        channel.unwrap(message.data);
+        channel.onReceived(message.data);
       };
       this.socket.onerror = function(error) {
         channellogger.fine("websocket error : " + error);
+        // TODO: reconnect ?
       };
       this.send = function(msg) {
-        channellogger.fine("send message " + JSON.stringify(msg) + " to "
-            + channel.url);
-        var future = new Future();
-        channel.socket.send(JSON.stringify(channel.wrap(msg, future.deliver)));
-        return future;
+        channellogger.fine("send message " + msg + " to " + channel.url);
+        channel.socket.send(msg);
       };
-      this.messageHandler = this.send;
-
       this.close = function() {
         channel.socket.close();
       };
+
     }
   });
 
-  var SocketIOChannel = Channel.extend({
-    initialize : function(url) {
-      this.url = url;
-      this.id = guid();
-    },
-    connect : function(future) {
-      channellogger.fine("connect channel " + this.id + " to destination "
-          + this.url);
-
-      var channel = this;
-      // var io = require("socket.io");
-      var socket = io.connect(channel.url);
-
-      socket.on('connect', function() {
-        channellogger.info("connected to " + channel.url);
-        future.deliver(channel);
-      });
-      socket.on('disconnect', function() {
-        channellogger.info("connection closed : " + this.url);
-      });
-      socket.on('message', function(message) {
-        channellogger.info("received message : " + message);
-        channel.unwrap(message);
-      });
-      this.send = function(msg) {
-        channellogger.fine("send message " + JSON.stringify(msg) + " to "
-            + channel.url);
-        var future = new Future();
-        socket.send(JSON.stringify(channel.wrap(msg, future.deliver)));
-        return future;
-      };
-      this.messageHandler = this.send;
-    }
-  });
+  // var SocketIOChannel = Channel.extend({
+  // initialize : function(url) {
+  // this.url = url;
+  // this.id = guid();
+  // },
+  // connect : function(future) {
+  // channellogger.fine("connect channel " + this.id + " to destination "
+  // + this.url);
+  //
+  // var channel = this;
+  // var io = require("socket.io");
+  // var socket = io.connect(channel.url);
+  //
+  // socket.on('connect', function() {
+  // channellogger.info("connected to " + channel.url);
+  // future.deliver(channel);
+  // });
+  // socket.on('disconnect', function() {
+  // channellogger.info("connection closed : " + this.url);
+  // });
+  // socket.on('message', function(message) {
+  // channellogger.info("received message : " + message);
+  // channel.unwrap(message);
+  // });
+  // this.send = function(msg) {
+  // channellogger.fine("send message " + JSON.stringify(msg) + " to "
+  // + channel.url);
+  // var future = new Future();
+  // socket.send(JSON.stringify(channel.wrap(msg, future.deliver)));
+  // return future;
+  // };
+  // this.messageHandler = this.send;
+  // }
+  // });
 
   /*****************************************************************************
    * Event bus DSL
@@ -278,5 +319,12 @@
    * exports
    ****************************************************************************/
   macchiato.createEventApplication = createEventApplication;
+  macchiato.filters = filters;
+  macchiato.Channel = Channel;
 
+  if (this.module && module.exports) {
+    module.exports = macchiato;
+  } else {
+    this.macchiato = macchiato;
+  }
 })();

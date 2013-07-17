@@ -22,7 +22,8 @@
   var levels = {
     eb : 5,
     vertx : 5,
-    channel : 5
+    channel : 5,
+    server : 5
   // actors : 3,
   // vertx : 3
   // deployer : 5
