@@ -1,0 +1,46 @@
+
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
+<head>
+<title>Hello world</title>
+
+
+<script src="../../../target/macchiato.js"></script>
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+
+<script type="text/javascript">
+  $(function() {
+
+    macchiato.createEventApplication(function(bus) {
+
+      // Send an hello on button click
+      $("#hello").on("click", function() {
+        var name = $("#name").val();
+        bus.publish({
+          'hello' : 'world',
+          'name' : name
+        });
+      });
+
+      // show an alert on server response
+      bus.subscribe(function(msg) {
+        alert(JSON.stringify(msg));
+      }, {
+        'welcome' : ".*"
+      });
+
+      bus.createChannel("ws://localhost:8092").when(function() {
+        console.log("connected to server !");
+      });
+
+    });
+  });
+</script>
+</head>
+<body>
+
+	<button id="hello">Hello event</button>
+	<input id="name" placeholder="My name"></input>
+
+</body>
+</html>
