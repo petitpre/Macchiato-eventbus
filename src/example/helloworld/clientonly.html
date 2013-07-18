@@ -1,0 +1,40 @@
+
+<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
+<head>
+<title>Hello world</title>
+
+<script
+	src="https://rawgithub.com/petitpre/Macchiato-eventbus/master/target/macchiato.min.js"></script>
+</head>
+<body>
+	<input id="name" placeholder="My name"></input>
+	<button id="hello">Hello</button>
+
+	<h2 id="greatings"></h2>
+</body>
+
+
+<script type="text/javascript">
+  macchiato.createEventApplication(function(bus) {
+
+    document.getElementById("hello").onclick = function() {
+      var name = document.getElementById("name").value;
+      bus.publish({
+        'hello' : 'world',
+        'name' : name
+      });
+    }
+
+    // show an alert on server response
+    bus.subscribe(function(msg) {
+      var greatings = document.getElementById("greatings");
+      greatings.innerHTML = ''; // clear existing
+      greatings.appendChild(document.createTextNode("Welcome " + msg.name));
+    }, {
+      'name' : ".*"
+    });
+
+  });
+</script>
+</html>
