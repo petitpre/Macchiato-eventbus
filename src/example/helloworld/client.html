@@ -24,7 +24,7 @@
 
       // show an alert on server response
       bus.subscribe(function(msg) {
-        alert(JSON.stringify(msg));
+        $("#greatings").html(msg.welcome);
       }, {
         'welcome' : ".*"
       });
@@ -41,6 +41,8 @@
 
 	<button id="hello">Hello event</button>
 	<input id="name" placeholder="My name"></input>
+
+	<h2 id="greatings"></h2>
 
 </body>
 </html>

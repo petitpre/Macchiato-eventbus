@@ -10,7 +10,7 @@ macchiato.createServerApplication(function(bus, server) {
 
     // send a hello reply
     bus.publish({
-      welcome : msg.name
+      welcome : "Welcome " + msg.name
     });
   }, {
     hello : ".*"
