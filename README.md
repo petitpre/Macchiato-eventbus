@@ -22,3 +22,21 @@ $> bower install
 
 To build library :
 $> grunt
+
+====================
+
+
+Prerequise:
+
+you need to have node.js installed
+
+clone git project
+install node.js packages :
+$> npm install
+
+Build last version of Macchiato event bus :
+$> bower
+
+
+run hello world example :
+$> 
