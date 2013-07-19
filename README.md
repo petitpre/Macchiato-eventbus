@@ -77,9 +77,28 @@ To create the server, put the following code into a file `server.js`
 
 To create the client, put the following code into a file `index.html`
 
+    <!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Strict//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'>
+    <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr"><head><title>Hello world</title>
+
+    <script src="https://rawgithub.com/petitpre/Macchiato-eventbus/master/target/macchiato.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+
+    <script type="text/javascript">
+      $(function() {
+        macchiato.createEventApplication(function(bus) {
+          bus.subscribe(function(msg) {
+            $("#content").append(msg.entered + "<br/>");
+          }, {'entered' : ".*" });
+          bus.createChannel("ws://localhost:8080").when(function() {
+            console.log("connected to server !");
+          });
+        });
+      });
+    </script>
+    </head><body><div id="content"></div></body></html>
     
-
-
+To run example, run server with command `node server.js` and open `index.html` in your browser.
+The text entered in the server console will be displayed in the web page.
 
 <h2 id="core-concepts">Core Concepts</h2>
 
@@ -118,42 +137,35 @@ To connect the bus events, we use channels. A channel is always open to the init
 Typically, the client is your web browser and the server is a server node.js.
 An event-bus running in node.js can also establish a connection to another  node.js event-bus
 
-Event-bus running in web browsers and Android can not accept incomming connections.
+Event-bus running in web browsers and Android can not accept incoming connections.
 
-
-A server-side event bus can create a new channel to another server-side bus and can receive new connections.
-Un bus d'evenement serveur peut se connecter à un autre bus d'evenement serveur et peut recevoir des connections
-Un bus d'evenement client peut seulement se connecter à un bus d'evenement serveur. 
-
-Typiquement, un bus serveur utilise node.js et est accessible.
-Un bus client peut etre dans votre page web ou application android. 
-
-Une fois les bus connectés par un channel, les événements des différents bus sont automatiquements routés entre les différents bus composants votre application.
-
-
-    macchiato.createEventApplication(function(bus) {
-      bus.createChannel("ws://localhost:8092").when(function() {
-        console.log("connected to server !");
-      });
-    });
+Once the event-bus are connected by a channel, the events from each event-bus are automatically routed to matching handlers. 
 
 <h2 id="#build">Build</h2>
 
-Prerequise:
-
 you need to have node.js installed
-
-clone git project
-install node.js packages :
-$> npm install
+   
+install node.js dependencies :
+    
+    $> npm install
 
 Build last version of Macchiato event bus :
-$> grunt
+    
+    $> grunt
 
-
-run hello world server :
-$> node src/example/helloworld/server.js
-
-open page src/example/helloworld/client.html in your web browser.
+Uncompressed and compressed version of macchiato-eventbus are available in `target` directory
  
 <h2 id="#license">License</h2>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
