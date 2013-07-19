@@ -20,18 +20,21 @@
 
     document.getElementById("hello").onclick = function() {
       var name = document.getElementById("name").value;
+
+      // publish an hello event
       bus.publish({
         'hello' : 'world',
         'name' : name
       });
     }
 
-    // show an alert on server response
+    // Subscribe to all hello event with a name
     bus.subscribe(function(msg) {
       var greatings = document.getElementById("greatings");
       greatings.innerHTML = ''; // clear existing
       greatings.appendChild(document.createTextNode("Welcome " + msg.name));
     }, {
+      'hello' : 'world',
       'name' : ".*"
     });
 

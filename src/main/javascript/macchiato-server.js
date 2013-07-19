@@ -27,8 +27,10 @@
 
   var serverlogger = macchiato.logger("server");
   macchiato.createServerApplication = function(callback) {
+    var serverfacade;
+
     macchiato.createEventApplication(function(bus) {
-      var serverfacade = {
+      serverfacade = {
         listen : function(port) {
           var WebSocketServer = require('websocket').server;
           var http = require('http');
@@ -45,21 +47,19 @@
           // WebSocket server
           wsServer.on('request', function(request) {
             serverlogger.fine("received new WS connection");
-
             var connection = request.accept('macchiato-protocol',
                 request.origin);
-
             var channel = new WSServerChannel(connection, bus);
-
             bus.publish({
               channel : channel
             });
-
           });
           serverlogger.info("open server on port " + port);
         }
       };
-      callback(bus, serverfacade);
+
+      callback(bus);
     });
-  }
+    return serverfacade;
+  };
 }());

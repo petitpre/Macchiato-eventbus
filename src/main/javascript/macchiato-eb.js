@@ -77,7 +77,7 @@
       };
 
       return subscription;
-    }
+    };
 
     /**
      * Unregister a new handler at specified address
@@ -106,17 +106,19 @@
     var filterMatch = function(filter, obj) {
       var match = true;
       var patt;
-      if (typeof filter == "string") {
+      if (typeof filter == "undefined") {
+        return false;
+      } else if (typeof filter == "string") {
         patt = new RegExp(filter);
         try {
           return patt.test(JSON.stringify(obj));
         } catch (err) {
           return false;
         }
-      }
-      if (typeof filter == "function") {
+      } else if (typeof filter == "function") {
         return filter(obj);
       }
+
       // filter properties
       for ( var filterprop in filter) {
         patt = new RegExp(filterprop);
@@ -148,6 +150,13 @@
       }
     };
 
+    this.send = function(dest, message) {
+      var future = new Future();
+      handlers[dest.id].handler(message, future.fulfill);
+
+      return future;
+    };
+
     var bus = this;
     /**
      * send current and futures registrations in any new channel
@@ -155,7 +164,7 @@
     bus.silentSubscribe(function(msg) {
       // when connected, send all previously registered handlers
       for ( var id in handlers) {
-        if (handlers[id].local == true) {
+        if (handlers[id].local === true) {
           msg.channel.sendSubscription({
             subscription : {
               id : id,
@@ -165,11 +174,15 @@
         }
       }
       // register to any new subscription
-      bus.silentSubscribe(function(msg) {
-        msg.channel.sendSubscription(msg);
+      bus.silentSubscribe(function(m) {
+        msg.channel.sendSubscription(m);
       }, {
         "subscription" : ".*"
       });
+
+      msg.channel.send(JSON.stringify({
+        initialized : true
+      }));
     }, {
       channel : filters.all
     });
@@ -187,7 +200,9 @@
           channel : channel
         });
       });
-      channel.connect(future);
+      channel.onConnected(future.fulfill);
+      channel.connect();
+
       return future;
     };
   };
@@ -204,6 +219,9 @@
     cleanup : function() {
       // TODO remove all registered handlers
     },
+    onConnected : function(connectionHandler) {
+      this.connectionHandler = connectionHandler;
+    },
     onReceived : function(msg) {
       var channel = this;
       var content = JSON.parse(msg);
@@ -211,6 +229,9 @@
         channel.bus.silentSubscribe(function(msg) {
           channel.sendMessage(msg);
         }, content.subscription.filter);
+      } else if (typeof content.initialized != "undefined") {
+        if (typeof this.connectionHandler != "undefined")
+          this.connectionHandler(this);
       } else if (typeof content.content != "undefined") {
         channel.bus.publish(content.content);
       }
@@ -244,7 +265,6 @@
       var channel = this;
       this.socket.onopen = function(event) {
         channellogger.info("connected to " + channel.url);
-        future.deliver(channel);
       };
       this.socket.onclose = function() {
         channellogger.info("connection closed : " + this.url);
@@ -267,44 +287,8 @@
       this.close = function() {
         channel.socket.close();
       };
-
     }
   });
-
-  // var SocketIOChannel = Channel.extend({
-  // initialize : function(url) {
-  // this.url = url;
-  // this.id = guid();
-  // },
-  // connect : function(future) {
-  // channellogger.fine("connect channel " + this.id + " to destination "
-  // + this.url);
-  //
-  // var channel = this;
-  // var io = require("socket.io");
-  // var socket = io.connect(channel.url);
-  //
-  // socket.on('connect', function() {
-  // channellogger.info("connected to " + channel.url);
-  // future.deliver(channel);
-  // });
-  // socket.on('disconnect', function() {
-  // channellogger.info("connection closed : " + this.url);
-  // });
-  // socket.on('message', function(message) {
-  // channellogger.info("received message : " + message);
-  // channel.unwrap(message);
-  // });
-  // this.send = function(msg) {
-  // channellogger.fine("send message " + JSON.stringify(msg) + " to "
-  // + channel.url);
-  // var future = new Future();
-  // socket.send(JSON.stringify(channel.wrap(msg, future.deliver)));
-  // return future;
-  // };
-  // this.messageHandler = this.send;
-  // }
-  // });
 
   /*****************************************************************************
    * Event bus DSL

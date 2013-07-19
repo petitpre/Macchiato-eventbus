@@ -16,7 +16,5 @@ macchiato.createServerApplication(function(bus, server) {
     hello : ".*"
   });
 
-  // start server
-  server.listen(8092);
-
-});
+}).listen(8092);
+;
