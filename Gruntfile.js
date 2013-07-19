@@ -52,7 +52,7 @@ module.exports = function(grunt) {
         exec : {
           start : {
             cmd : function() {
-              return "node src/test/server/testserver.js & echo $! >   .node.pid; sleep 2";
+              return "node src/test/server/testserver.js & echo $! >  .node.pid";
             }
           },
           stop : {

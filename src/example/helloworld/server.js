@@ -3,7 +3,7 @@ require("../../main/javascript/macchiato-server.js");
 /**
  * Sample
  */
-macchiato.createServerApplication(function(bus, server) {
+macchiato.createServerApplication(function(bus) {
 
   bus.subscribe(function(msg) {
     console.log("received :" + JSON.stringify(msg));
@@ -17,4 +17,3 @@ macchiato.createServerApplication(function(bus, server) {
   });
 
 }).listen(8092);
-;
