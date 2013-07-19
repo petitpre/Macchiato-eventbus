@@ -9,7 +9,7 @@ You can use Macchiato-eventbus to build [real-time web](http://en.wikipedia.org/
 ## Documentation 
 * [Installation](#installation)
 * [Two minutes tutorial](#tuto)
-* [Core Concepts](#core-concepts)
+* [Core Concepts](#coreconcepts)
 * [Build](#build)
 * [License](#license)
 
@@ -55,8 +55,9 @@ You can use the bus event macchiato in your node.js application :
 
 You need to have [node.js](http://nodejs.org/) installed on your computer.
 
-Nous allons créer une application dont le serveur node.js lit les valeurs de la console et envoie un message avec chaque ligne.
-Un client web se connectera a se serveur et affichera l'ensemble des messages saisie dans la console du serveur.
+We will create an application with two parts.
+The first is a node.js server, which reads the values ​​from the console and publish an event with content.
+The second is a web client connected to the server. It will display all messages entered into the server console.
 
 In your project directory, use node package manager to install macchiato event-bus :
 
@@ -100,7 +101,7 @@ To create the client, put the following code into a file `index.html`
 To run example, run server with command `node server.js` and open `index.html` in your browser.
 The text entered in the server console will be displayed in the web page.
 
-<h2 id="core-concepts">Core Concepts</h2>
+<h2 id="coreconcepts">Core Concepts</h2>
 
 ### Handler references
 
@@ -141,7 +142,7 @@ Event-bus running in web browsers and Android can not accept incoming connection
 
 Once the event-bus are connected by a channel, the events from each event-bus are automatically routed to matching handlers. 
 
-<h2 id="#build">Build</h2>
+<h2 id="build">Build</h2>
 
 you need to have node.js installed
    
@@ -155,7 +156,7 @@ Build last version of Macchiato event bus :
 
 Uncompressed and compressed version of macchiato-eventbus are available in `target` directory
  
-<h2 id="#license">License</h2>
+<h2 id="license">License</h2>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
