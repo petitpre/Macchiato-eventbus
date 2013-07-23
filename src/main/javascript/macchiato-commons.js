@@ -19,22 +19,20 @@
 (function() {
   var macchiato = macchiato || {};
 
-  var levels = {
-    eb : 5,
-    vertx : 5,
-    channel : 5,
-    server : 5
-  // actors : 3,
-  // vertx : 3
-  // deployer : 5
-  // manager : 5
-  };
+  var loggers = {};
 
   var logger = function(name) {
+    if (typeof loggers[name] != "undefined") {
+      return loggers[name];
+    } 
+      
+    
     console.log("create logger " + name);
-    var level = levels[name] ? levels[name] : 1;
-
-    return {
+    var level = 3;
+    var log = {
+      setLevel : function(l) {
+        level = l;
+      },
       error : function(msg) {
         if (level > 0)
           console.log("[" + name + "][ERROR] " + msg);
@@ -56,6 +54,8 @@
           console.log("[" + name + "][FINE] " + msg);
       }
     };
+    loggers[name] = log;
+    return log;
   };
 
   var Class = function() {

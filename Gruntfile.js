@@ -30,73 +30,72 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-qunit');
 
   // Project configuration.
-  grunt
-      .initConfig({
-        pkg : grunt.file.readJSON('package.json'),
+  grunt.initConfig({
+    pkg : grunt.file.readJSON('package.json'),
 
-        // Before generating any new files, remove any previously-created files.
-        clean : {
-          tests : [ 'target' ]
-        },
+    // Before generating any new files, remove any previously-created files.
+    clean : {
+      tests : [ 'target' ]
+    },
 
-        jshint : {
-          all : [ 'Gruntfile.js', 'src/main/javascript/*.js',
-              'src/test/javascript/*.js' ],
-          options : {
-            // allow use of eval
-            evil : true,
-            laxbreak : true
-          }
-        },
+    jshint : {
+      all : [ 'Gruntfile.js', 'src/main/javascript/*.js',
+          'src/test/javascript/*.js' ],
+      options : {
+        // allow use of eval
+        evil : true,
+        laxbreak : true
+      }
+    },
 
-        exec : {
-          start : {
-            cmd : function() {
-              return "node src/test/server/testserver.js & echo $! >  .node.pid";
-            }
-          },
-          stop : {
-            cmd : function() {
-              return "value=`cat .node.pid`; kill $value; rm  .node.pid";
-            }
-          }
-        },
-
-        /**
-         * run qunit test
-         */
-        qunit : {
-          all : [ 'src/test/client/*.html' ]
-        },
-
-        execute : {
-          test : {
-            src : [ 'src/test/server/serverTestLauncher.js' ]
-          }
-        },
-
-        concat : {
-          // concat task configuration goes here.
-          bar : {
-            src : [ 'src/main/javascript/futuresjs/*.js',
-                'src/main/javascript/macchiato-commons.js',
-                'src/main/javascript/macchiato-eb.js' ],
-            dest : 'target/macchiato.js'
-          }
-        },
-
-        uglify : {
-          build : {
-            src : 'target/macchiato.js',
-            dest : 'target/macchiato.min.js'
-          }
+    exec : {
+      start : {
+        cmd : function() {
+          return "node src/test/server/testserver.js & echo $! >  .node.pid";
         }
-      });
+      },
+      stop : {
+        cmd : function() {
+          return "value=`cat .node.pid`; kill $value; rm  .node.pid";
+        }
+      }
+    },
+
+    /**
+     * run qunit test
+     */
+    qunit : {
+      all : [ 'src/test/client/*.html' ]
+    },
+
+    execute : {
+      test : {
+        src : [ 'src/test/server/serverTestLauncher.js' ]
+      }
+    },
+
+    concat : {
+      // concat task configuration goes here.
+      bar : {
+        src : [ 'src/main/javascript/futuresjs/*.js',
+            'src/main/javascript/macchiato-commons.js',
+            'src/main/javascript/macchiato-eb.js' ],
+        dest : 'target/macchiato.js'
+      }
+    },
+
+    uglify : {
+      build : {
+        src : 'target/macchiato.js',
+        dest : 'target/macchiato.min.js'
+      }
+    }
+  });
 
   // Default task(s).
-  grunt.registerTask('test', [ 'clean', 'jshint', 'exec:start', 'qunit',
-      'execute:test', 'exec:stop' ]);
+  grunt.registerTask('test', [ 'jshint', 'exec:start', 'qunit', 'execute:test',
+      'exec:stop' ]);
   grunt.registerTask('build', [ 'concat', 'uglify' ]);
-  grunt.registerTask('default', [ 'clean', /* 'test', */'build' ]);
+  grunt.registerTask('default', [ 'clean', 'jshint', /* 'test', */'build' ]);
 
 };

@@ -138,22 +138,19 @@
      * Send a message to all handlers that listen for this address
      */
     this.publish = function(message) {
+      var future = new Future();
       for ( var id in handlers) {
         var filter = handlers[id].filter;
         if (filterMatch(filter, message)) {
           try {
-            handlers[id].handler(message);
+            var ret = handlers[id].handler(message);
+            future.deliver(ret);
           } catch (err) {
             log.warning("unable to publish message " + err);
           }
         }
       }
-    };
-
-    this.send = function(dest, message) {
-      var future = new Future();
-      handlers[dest.id].handler(message, future.fulfill);
-
+      future.fulfill("done");
       return future;
     };
 
