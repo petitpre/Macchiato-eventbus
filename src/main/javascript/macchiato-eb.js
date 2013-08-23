@@ -17,8 +17,10 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 (function() {
-  if (typeof require != 'undefined')
+
+  if (typeof require != 'undefined') {
     require("./macchiato-commons.js");
+  }
 
   var log = macchiato.logger("eb");
 
@@ -142,12 +144,12 @@
       for ( var id in handlers) {
         var filter = handlers[id].filter;
         if (filterMatch(filter, message)) {
-          try {
-            var ret = handlers[id].handler(message);
-            future.deliver(ret);
-          } catch (err) {
-            log.warning("unable to publish message " + err);
-          }
+          // try {
+          var ret = handlers[id].handler(message);
+          future.deliver(ret);
+          // } catch (err) {
+          // log.warning("unable to publish message " + err);
+          // }
         }
       }
       future.fulfill("done");

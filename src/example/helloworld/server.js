@@ -1,5 +1,9 @@
 require("../../main/javascript/macchiato-server.js");
 
+macchiato.logger("serverchannel").setLevel(6);
+macchiato.logger("server").setLevel(6);
+
+
 /**
  * Sample
  */

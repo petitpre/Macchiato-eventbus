@@ -968,12 +968,12 @@
       for ( var id in handlers) {
         var filter = handlers[id].filter;
         if (filterMatch(filter, message)) {
-          try {
+//          try {
             var ret = handlers[id].handler(message);
             future.deliver(ret);
-          } catch (err) {
-            log.warning("unable to publish message " + err);
-          }
+//          } catch (err) {
+//            log.warning("unable to publish message " + err);
+//          }
         }
       }
       future.fulfill("done");

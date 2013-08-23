@@ -1,6 +1,16 @@
 (function() {
 
+  require("./futuresjs/future.js");
+  require("./futuresjs/chainify.js");
+  require("./futuresjs/join.js");
+  require("./futuresjs/loop.js");
+  require("./futuresjs/sequence.js");
+  
+  
   require("./macchiato-eb.js");
+  
+  
+  
 
   var channellogger = macchiato.logger("serverchannel");
   var WSServerChannel = macchiato.Channel.extend({
